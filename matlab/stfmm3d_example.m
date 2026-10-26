@@ -4,7 +4,7 @@ disp(" ");
 disp(" ");
 %%   source to source, stokeslet only, pot+pre+grad example
 %
-
+tic
 clear srcinfo ns U eps pg;
 disp("Example 1: source to source, stokeslet, pot+pre+grad");
 disp(" ");
@@ -60,5 +60,6 @@ disp("pottarg=");
 disp(U.pottarg(:,:,1:3));
 disp("pretarg=");
 disp(U.pretarg(:,1:3));
+toc
 
 clear srcinfo ns U eps ifppreg ifppregtarg nt targ nd;

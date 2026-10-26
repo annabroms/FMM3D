@@ -1,12 +1,15 @@
-clear srcinfo
 
-ns = 4000;
+for k = 1:5
+    clear srcinfo
+    tic
+    k
+ns = 40000;
 srcinfo.sources = rand(3,ns);
 srcinfo.stoklet = rand(3,ns);
 srcinfo.strslet = rand(3,ns);
 srcinfo.strsvec = rand(3,ns);
 
-nt = 3999;
+nt = 39999;
 targ = rand(3,nt);
 
 eps = 1e-5;
@@ -80,3 +83,5 @@ ipass(2) = 1;
 
 isum = sum(ipass);
 fprintf("Successfully cleared %d out of 2 tests in stokes testing suite\n",isum);
+passed_time(k) = toc;
+end
