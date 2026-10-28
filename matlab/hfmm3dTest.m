@@ -1,5 +1,5 @@
 clear srcinfo
-tic
+
 ns = 4000;
 srcinfo.sources = rand(3,ns);
 srcinfo.charges = rand(1,ns)+1i*rand(1,ns);
@@ -599,5 +599,5 @@ ipass(36) = 1;
 
 isum = sum(ipass);
 fprintf("Successfully cleared %d out of 36 tests in Helmholtz testing suite\n",isum);
-toc
+
 
