@@ -19,7 +19,7 @@ c$    use omp_lib
       
       integer *8 ipass(10)
       integer *8 nd,ns,nt,ifstoklet,ifstrslet,ifppreg,ifppregtarg,ier
-      integer *8 i,j,k,ntests,istress,ntest
+      integer *8 i,j,k,ntests,istress,ntest,ifdir
       complex *16 eye
 c
       data eye/(0.0d0,1.0d0)/
@@ -116,11 +116,12 @@ c$    t2 = omp_get_wtime()
 
       istress = 1
       thresh = 1d-15
+      ifdir = 3
       call st3ddirectstokstrsg(nd,source,stoklet,istress,
-     1     strslet,strsvec,ns,source,ntest,pot2,pre2,grad2,thresh)
+     1     strslet,strsvec,ns,source,ntest,ifdir,pot2,pre2,grad2,thresh)
       call st3ddirectstokstrsg(nd,source,stoklet,istress,
-     1     strslet,strsvec,ns,targ,ntest,pottarg2,pretarg2,gradtarg2,
-     2     thresh)
+     1     strslet,strsvec,ns,targ,ntest,ifdir,pottarg2,pretarg2,
+     2     gradtarg2,thresh)
 
 
       derr = 0

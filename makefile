@@ -81,6 +81,8 @@ ifneq ($(OMP),OFF)
   LIBS += $(OMPLIBS)
   DYLIBS += $(OMPLIBS)
   MEXLIBS += $(OMPLIBS)
+  # direct Stokes tests that check thread counts and nested calls
+  STOKOMPTESTS = test/stokkernels_openmp test/stokkernels_opt
 endif
 
 
@@ -237,17 +239,23 @@ MWRAPFILE2 = fmm3d_legacy
 GATEWAY = $(MWRAPFILE)
 GATEWAY2 = $(MWRAPFILE2)
 
-matlab:	$(STATICLIB) matlab/$(GATEWAY).c matlab/$(GATEWAY2).c
+GATEWAYOPT = st3ddir_opt_mex
+
+matlab:	$(STATICLIB) matlab/$(GATEWAY).c matlab/$(GATEWAY2).c matlab/$(GATEWAYOPT).c
 	$(MEX) matlab/$(GATEWAY).c lib-static/$(STATICLIB) $(MFLAGS) \
 	-output matlab/fmm3d $(MEXLIBS)
 	$(MEX) matlab/$(GATEWAY2).c lib-static/$(STATICLIB) $(MFLAGS) \
 	-output matlab/fmm3d_legacy $(MEXLIBS)
+	$(MEX) matlab/$(GATEWAYOPT).c lib-static/$(STATICLIB) $(MFLAGS) \
+	-output matlab/$(GATEWAYOPT) $(MEXLIBS)
 
-matlab-dyn:	$(DYNAMICLIB) matlab/$(GATEWAY).c matlab/$(GATEWAY2).c
+matlab-dyn:	$(DYNAMICLIB) matlab/$(GATEWAY).c matlab/$(GATEWAY2).c matlab/$(GATEWAYOPT).c
 	$(MEX) matlab/$(GATEWAY).c $(MFLAGS) \
 	-output matlab/fmm3d $(MEXLIBS) -L$(FMM_INSTALL_DIR) $(LLINKLIB)
 	$(MEX) matlab/$(GATEWAY2).c $(MFLAGS) \
 	-output matlab/fmm3d_legacy $(MEXLIBS) -L$(FMM_INSTALL_DIR) $(LLINKLIB)
+	$(MEX) matlab/$(GATEWAYOPT).c $(MFLAGS) \
+	-output matlab/$(GATEWAYOPT) $(MEXLIBS) -L$(FMM_INSTALL_DIR) $(LLINKLIB)
 
 mex:  $(STATICLIB)
 	cd matlab; $(MWRAP) $(MWFLAGS) -list -mex $(GATEWAY) -mb $(MWRAPFILE).mw;\
@@ -273,11 +281,13 @@ python-dist: $(STATICLIB)
 
 
 # testing routines
+# each STOKOMPTESTS target test/x_y runs test/Stokes/int2-test-x-y
 #
-test: $(STATICLIB) $(TOBJS) test/helmrouts test/hfmm3d test/hfmm3d_vec test/hfmm3d_scale test/laprouts test/lfmm3d test/lfmm3d_vec test_hfmm3d_mps test/lfmm3d_scale test/stfmm3d test/stokkernels test/stokkernels_rotlet_doublet test/emfmm3d
+test: $(STATICLIB) $(TOBJS) test/helmrouts test/hfmm3d test/hfmm3d_vec test/hfmm3d_scale test/laprouts test/lfmm3d test/lfmm3d_vec test_hfmm3d_mps test/lfmm3d_scale test/stfmm3d test/stokkernels test/stokkernels_rotlet_doublet test/emfmm3d $(STOKOMPTESTS)
 	(cd test/Helmholtz; ./run_helmtest.sh)
 	(cd test/Laplace; ./run_laptest.sh)
 	(cd test/Stokes; ./run_stoktest.sh)
+	$(foreach t,$(STOKOMPTESTS),test/Stokes/int2-$(subst _,-,$(subst /,-,$(t))) &&) true
 	(cd test/Maxwell; ./run_emtest.sh)
 	cat print_testreshelm.txt
 	cat print_testreslap.txt
@@ -339,6 +349,12 @@ test/stokkernels:
 
 test/stokkernels_rotlet_doublet:
 	$(FC) $(FFLAGS) test/Stokes/test_stokkernels_rotlet_doublet.f $(TOBJS) $(COMOBJS) $(LOBJS) $(STOBJS) -o test/Stokes/int2-test-stokkernels-rotlet-doublet $(LIBS)
+
+test/stokkernels_openmp:
+	$(FC) $(FFLAGS) test/Stokes/test_stokkernels_openmp.f90 $(STOBJS) $(COMOBJS) $(LOBJS) -o test/Stokes/int2-test-stokkernels-openmp $(LIBS)
+
+test/stokkernels_opt:
+	$(FC) $(FFLAGS) test/Stokes/test_stokkernels_opt.f90 $(STOBJS) $(COMOBJS) $(LOBJS) -o test/Stokes/int2-test-stokkernels-opt $(LIBS)
 
 test/emfmm3d:
 	$(FC) $(FFLAGS) test/Maxwell/test_emfmm3d.f $(TOBJS) $(COMOBJS) $(HOBJS) $(EMOBJS) -o test/Maxwell/int2-test-emfmm3d $(LIBS)

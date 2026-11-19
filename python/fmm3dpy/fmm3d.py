@@ -1282,8 +1282,10 @@ def st3ddir(*,eps,sources,stoklet=None,strslet=None,strsvec=None,rotlet=None,rot
         doublet = np.zeros([nd,3,ns],dtype='double')
         doubvec = np.zeros([nd,3,ns],dtype='double')
 
-    out.pot,out.pre,out.grad = stfmm.st3ddirectstokstrsrotdoubg(sources,stoklet,ifstrslet,strslet,strsvec,ifrotlet,rotlet,rotvec,ifdoublet,doublet,doubvec,sources,thresh,nd,ns,nt)
-    out.pottarg,out.pretarg,out.gradtarg = stfmm.st3ddirectstokstrsrotdoubg(sources,stoklet,ifstrslet,strslet,strsvec,ifrotlet,rotlet,rotvec,ifdoublet,doublet,doubvec,targets,thresh,nd,ns,nt)
+    if(ifppreg > 0):
+        out.pot,out.pre,out.grad = stfmm.st3ddirectstokstrsrotdoubg(sources,stoklet,ifstrslet,strslet,strsvec,ifrotlet,rotlet,rotvec,ifdoublet,doublet,doubvec,sources,ifppreg,thresh,nd,ns,ns)
+    if(ifppregtarg > 0 and nt > 0):
+        out.pottarg,out.pretarg,out.gradtarg = stfmm.st3ddirectstokstrsrotdoubg(sources,stoklet,ifstrslet,strslet,strsvec,ifrotlet,rotlet,rotvec,ifdoublet,doublet,doubvec,targets,ifppregtarg,thresh,nd,ns,nt)
 
     if(ifppreg < 3):
         out.grad = None

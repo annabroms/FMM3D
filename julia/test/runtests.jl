@@ -179,8 +179,18 @@ end
     @test norm(vals2dc.grad-vals1dcs.gradtarg)/norm(vals1dcs.gradtarg) < eps
     @test norm(vals2dc.pottarg-vals1dc.pottarg)/norm(vals1dc.pottarg) < eps
     @test norm(vals2dc.pretarg-vals1dc.pretarg)/norm(vals1dc.pretarg) < eps    
-    @test norm(vals2dc.gradtarg-vals1dc.gradtarg)/norm(vals1dc.gradtarg) < eps    
+    @test norm(vals2dc.gradtarg-vals1dc.gradtarg)/norm(vals1dc.gradtarg) < eps
     
+    # reduced output levels must agree with the full evaluation
+    vals3v = st3ddir(sources,targets,stoklet=stoklet,
+                     strslet=strslet,strsvec=strsvec,ppregt=1,thresh=1e-16)
+    vals3p = st3ddir(sources,targets,stoklet=stoklet,
+                     strslet=strslet,strsvec=strsvec,ppregt=2,thresh=1e-16)
+    @test norm(vals3v.pottarg-vals1dc.pottarg)/norm(vals1dc.pottarg) < 1e-14
+    @test norm(vals3p.pottarg-vals1dc.pottarg)/norm(vals1dc.pottarg) < 1e-14
+    @test norm(vals3p.pretarg-vals1dc.pretarg)/norm(vals1dc.pretarg) < 1e-14
+    @test isnothing(vals3v.pretarg) && isnothing(vals3v.gradtarg)
+    @test isnothing(vals3p.gradtarg)
 
 end
 

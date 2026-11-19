@@ -115,9 +115,14 @@ fc = meson.get_compiler('fortran')
 c_args = cc.get_supported_arguments(['-Wno-format'])
 f_args = fc.get_supported_arguments(['-w', '-std=legacy'])
 
+# Apply OpenMP to both Fortran compilation and extension linking.
+# Compilers without OpenMP retain the serial implementation.
+openmp_dep = dependency('openmp', language: 'fortran', required: false)
+
 fmm3d_lib = static_library('fmm3d',
   fmm_src,
   fortran_args: f_args,
+  dependencies: [openmp_dep],
   gnu_symbol_visibility: 'hidden'
 )
 
@@ -146,7 +151,7 @@ foreach name, sources : modules_to_build
   py.extension_module(
     mod_name,
     gen_pyf,
-    dependencies: [f2py_dep],
+    dependencies: [f2py_dep, openmp_dep],
     link_with: [fmm3d_lib],
     c_args: c_args,
     install: true,

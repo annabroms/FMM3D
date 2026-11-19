@@ -32,13 +32,14 @@ c     L_{jk} = -1/(2\pi) \delta_{jk} + 3 r_j r_k/(2\pi r^5)
 
 
       subroutine st3ddirectstokg(nd,sources,stoklet,ns,targ,nt,
-     1     pot,pre,grad,thresh)
+     1     ifppreg,pot,pre,grad,thresh)
 cf2py  intent(in) nd
 cf2py  intent(in) sources
 cf2py  intent(in) stoklet
 cf2py  intent(in) ns
 cf2py  intent(in) targ
 cf2py  intent(in) nt
+cf2py  intent(in) ifppreg
 cf2py  intent(in) thresh
 cf2py  intent(out) pot,pre,grad
 c
@@ -88,6 +89,13 @@ c        potential at target won't be updated if
 c        |t - s| <= thresh, where t is the target
 c        location and, and s is the source location 
 c
+c     ifppreg in: integer *8
+c        flag for evaluating potential, pressure, and gradient
+c           ifppreg = 0, nothing is computed
+c           ifppreg = 1, only potential
+c           ifppreg = 2, potential and pressure
+c           ifppreg = 3, potential, pressure, and gradient
+c
 c-----------------------------------------------------------------------
 c
 c   OUTPUT:
@@ -106,9 +114,10 @@ c        for the lth density at the kth target
 c
 c     TODO: implement other stresslet options
 c------------------------------------------------------------------
+c$    use omp_lib, only: omp_in_parallel
       implicit none
 
-      integer *8 nd, ns, nt
+      integer *8 nd, ns, nt, ifppreg
       real *8 sources(3,ns),targ(3,nt)
       real *8 stoklet(nd,3,ns)
       real *8 pot(nd,3,nt),pre(nd,nt),grad(nd,3,3,nt)
@@ -126,9 +135,15 @@ c     local
 
       threshsq = thresh**2
 
+      if (ifppreg .lt. 1) return
 
 c     stokeslet contribution
       
+c     Each target owns its outputs; retain source summation order.
+c     Avoid nested teams when called inside an FMM parallel loop.
+c$omp parallel do default(shared) schedule(static)
+c$omp& if (.not.omp_in_parallel() .and. nt*ns .ge. 4096)
+c$omp& private(i,j,idim,zdiff,r2,r,r3,pl,d1,d2,d3)
       do i = 1,nt
          do j = 1,ns
             zdiff(1) = targ(1,i)-sources(1,j)
@@ -158,6 +173,10 @@ c     stokeslet contribution
                pot(idim,1,i) = pot(idim,1,i) + zdiff(1)*pl
                pot(idim,2,i) = pot(idim,2,i) + zdiff(2)*pl
                pot(idim,3,i) = pot(idim,3,i) + zdiff(3)*pl
+
+               if (ifppreg .ge. 2) pre(idim,i) = pre(idim,i) + pl*2
+
+               if (ifppreg .lt. 3) cycle
 
                grad(idim,1,1,i) = grad(idim,1,1,i) + pl
                grad(idim,2,2,i) = grad(idim,2,2,i) + pl
@@ -193,21 +212,18 @@ c     stokeslet contribution
                grad(idim,1,3,i) = grad(idim,1,3,i) + zdiff(1)*d3
                grad(idim,2,3,i) = grad(idim,2,3,i) + zdiff(2)*d3
                grad(idim,3,3,i) = grad(idim,3,3,i) + zdiff(3)*d3
-
-               pre(idim,i) = pre(idim,i) + pl*2
-
-               
             enddo
  10         continue
          enddo
       enddo
+c$omp end parallel do
 
       
       return
       end
 
       subroutine st3ddirectstokstrsg(nd,sources,stoklet,istress,
-     1     strslet,strsvec,ns,targ,nt,pot,pre,grad,thresh)
+     1     strslet,strsvec,ns,targ,nt,ifppreg,pot,pre,grad,thresh)
 cf2py  intent(in) nd
 cf2py  intent(in) sources
 cf2py  intent(in) stoklet,istress
@@ -215,6 +231,7 @@ cf2py  intent(in) strslet,strsvec
 cf2py  intent(in) ns
 cf2py  intent(in) targ
 cf2py  intent(in) nt
+cf2py  intent(in) ifppreg
 cf2py  intent(in) thresh
 cf2py  intent(out) pot,pre,grad
 c
@@ -286,6 +303,13 @@ c        potential at target won't be updated if
 c        |t - s| <= thresh, where t is the target
 c        location and, and s is the source location 
 c
+c     ifppreg in: integer *8
+c        flag for evaluating potential, pressure, and gradient
+c           ifppreg = 0, nothing is computed
+c           ifppreg = 1, only potential
+c           ifppreg = 2, potential and pressure
+c           ifppreg = 3, potential, pressure, and gradient
+c
 c-----------------------------------------------------------------------
 c
 c   OUTPUT:
@@ -304,9 +328,10 @@ c        for the lth density at the kth target
 c
 c     TODO: implement other stresslet options
 c------------------------------------------------------------------
+c$    use omp_lib, only: omp_in_parallel
       implicit none
 
-      integer *8 nd, ns, nt, istress
+      integer *8 nd, ns, nt, istress, ifppreg
       real *8 sources(3,ns),targ(3,nt),strslet(nd,3,ns)
       real *8 strsvec(nd,3,ns),stoklet(nd,3,ns)
       real *8 pot(nd,3,nt),pre(nd,nt),grad(nd,3,3,nt)
@@ -324,16 +349,23 @@ c     local
 
 
       call st3ddirectstokg(nd,sources,stoklet,ns,targ,nt,
-     1     pot,pre,grad,thresh)
+     1     ifppreg,pot,pre,grad,thresh)
 
       
       threshsq = thresh**2
 
+      if (ifppreg .lt. 1) return
 
       if (istress .ne. 1) goto 100
 
 c     type I stresslet
       
+c     Each target owns its outputs; retain source summation order.
+c     Avoid nested teams when called inside an FMM parallel loop.
+c$omp parallel do default(shared) schedule(static)
+c$omp& if (.not.omp_in_parallel() .and. nt*ns .ge. 4096)
+c$omp& private(i,j,idim,zdiff,r2,r,r3,r5,dmu,dnu,pl,pv,temp,dmunu)
+c$omp& private(tempx1,tempx2,tempx3)
       do i = 1,nt
          do j = 1,ns
             zdiff(1) = targ(1,i)-sources(1,j)
@@ -366,6 +398,15 @@ c     type I stresslet
                pot(idim,2,i) = pot(idim,2,i) + zdiff(2)*temp
                pot(idim,3,i) = pot(idim,3,i) + zdiff(3)*temp
 
+               if (ifppreg .ge. 2) then
+                  dmunu = dmu(1)*dnu(1) + dmu(2)*dnu(2) + dmu(3)*dnu(3)
+                  dmunu = dmunu * inv4pi
+                  pre(idim,i) = pre(idim,i) - 2.0d0*dmunu/r3 +
+     1                          2.0d0*temp
+               endif
+
+               if (ifppreg .lt. 3) cycle
+
                tempx1 = 3.0d0*(dmu(1)*pv + dnu(1)*pl -
      1              5.0d0*zdiff(1)*pl*pv/r2)/ r5
                tempx2 = 3.0d0*(dmu(2)*pv + dnu(2)*pl -
@@ -391,16 +432,12 @@ c     type I stresslet
                grad(idim,1,3,i) = grad(idim,1,3,i) + zdiff(3)*tempx1
                grad(idim,2,3,i) = grad(idim,2,3,i) + zdiff(3)*tempx2
                grad(idim,3,3,i) = grad(idim,3,3,i) + zdiff(3)*tempx3
-
-               dmunu = dmu(1)*dnu(1) + dmu(2)*dnu(2) + dmu(3)*dnu(3)
-               dmunu = dmunu * inv4pi
-               
-               pre(idim,i) = pre(idim,i) - 2.0d0*dmunu/r3 + 2.0d0*temp
             enddo
             
  20         continue
          enddo
       enddo
+c$omp end parallel do
       
       return
       
@@ -414,7 +451,7 @@ c     type I stresslet
       subroutine st3ddirectstokstrsrotdoubg(nd,sources,stoklet,istress,
      1     strslet,strsvec,irotlet,rotlet,rotvec,
      2     idoublet,doublet,doubvec,
-     3     ns,targ,nt,pot,pre,grad,thresh)
+     3     ns,targ,nt,ifppreg,pot,pre,grad,thresh)
 cf2py  intent(in) nd
 cf2py  intent(in) sources
 cf2py  intent(in) stoklet,istress
@@ -424,6 +461,7 @@ cf2py  intent(in) idoublet,doublet,doubvec
 cf2py  intent(in) ns
 cf2py  intent(in) targ
 cf2py  intent(in) nt
+cf2py  intent(in) ifppreg
 cf2py  intent(in) thresh
 cf2py  intent(out) pot,pre,grad
 c
@@ -517,6 +555,13 @@ c        potential at target won't be updated if
 c        |t - s| <= thresh, where t is the target
 c        location and, and s is the source location
 c
+c     ifppreg in: integer *8
+c        flag for evaluating potential, pressure, and gradient
+c           ifppreg = 0, nothing is computed
+c           ifppreg = 1, only potential
+c           ifppreg = 2, potential and pressure
+c           ifppreg = 3, potential, pressure, and gradient
+c
 c-----------------------------------------------------------------------
 c
 c   OUTPUT:
@@ -535,9 +580,10 @@ c        for the lth density at the kth target
 c
 c     TODO: implement other stresslet options
 c------------------------------------------------------------------
+c$    use omp_lib, only: omp_in_parallel
       implicit none
 
-      integer *8 nd, ns, nt, istress, irotlet, idoublet
+      integer *8 nd, ns, nt, istress, irotlet, idoublet, ifppreg
       real *8 sources(3,ns),targ(3,nt),strslet(nd,3,ns)
       real *8 rotlet(nd,3,ns),rotvec(nd,3,ns)
       real *8 doublet(nd,3,ns),doubvec(nd,3,ns)
@@ -557,17 +603,25 @@ c     local
 
       if (istress .ne. 1) then
          call st3ddirectstokg(nd,sources,stoklet,ns,targ,nt,
-     1        pot,pre,grad,thresh)
+     1        ifppreg,pot,pre,grad,thresh)
       else
          call st3ddirectstokstrsg(nd,sources,stoklet,istress,
-     1        strslet,strsvec,ns,targ,nt,pot,pre,grad,thresh)
+     1        strslet,strsvec,ns,targ,nt,ifppreg,pot,pre,grad,thresh)
       endif
 
       threshsq = thresh**2
 
+      if (ifppreg .lt. 1) return
+
       if (irotlet .ne. 1 .and. idoublet .ne. 1) goto 100
 
 c     rotlet and doublet
+c     Each target owns its outputs; retain source summation order.
+c     Avoid nested teams when called inside an FMM parallel loop.
+c$omp parallel do default(shared) schedule(static)
+c$omp& if (.not.omp_in_parallel() .and. nt*ns .ge. 4096)
+c$omp& private(i,j,idim,zdiff,r2,r,r3,r5,r3inv,rlet,rvec,rpl,rpv)
+c$omp& private(dlet,dvec,dpl,dpv,dlv,temp,tempx1,tempx2,tempx3)
       do i = 1,nt
          do j = 1,ns
             zdiff(1) = targ(1,i)-sources(1,j)
@@ -603,6 +657,7 @@ c     rotlet and doublet
                   pot(idim,3,i) = pot(idim,3,i) - rvec(3)*rpl*r3inv +
      1                            rlet(3)*rpv*r3inv
 
+                  if (ifppreg .ge. 3) then
                   tempx1 = -(rlet(1) - 3.0d0*zdiff(1)*rpl/r2) * r3inv
                   tempx2 = -(rlet(2) - 3.0d0*zdiff(2)*rpl/r2) * r3inv
                   tempx3 = -(rlet(3) - 3.0d0*zdiff(3)*rpl/r2) * r3inv
@@ -634,6 +689,7 @@ c     rotlet and doublet
                   grad(idim,1,3,i) = grad(idim,1,3,i) + rlet(3)*tempx1
                   grad(idim,2,3,i) = grad(idim,2,3,i) + rlet(3)*tempx2
                   grad(idim,3,3,i) = grad(idim,3,3,i) + rlet(3)*tempx3
+                  endif
                endif
 
                if (idoublet .eq. 1) then
@@ -663,6 +719,12 @@ c     rotlet and doublet
      1                            dvec(3)*dpl*r3inv + dlet(3)*dpv*r3inv+
      2                            zdiff(3)*temp
 
+                  if (ifppreg .ge. 2) then
+                     pre(idim,i) = pre(idim,i) - 2.0d0*dlv*r3inv
+     1                                         + 2.0d0*temp
+                  endif
+
+                  if (ifppreg .ge. 3) then
                   tempx1 = 3.0d0*(dlet(1)*dpv + dvec(1)*dpl -
      1                 5.0d0*zdiff(1)*dpl*dpv/r2)*inv4pi/r5
                   tempx2 = 3.0d0*(dlet(2)*dpv + dvec(2)*dpl -
@@ -735,9 +797,7 @@ c     rotlet and doublet
                   grad(idim,1,3,i) = grad(idim,1,3,i) + zdiff(3)*tempx1
                   grad(idim,2,3,i) = grad(idim,2,3,i) + zdiff(3)*tempx2
                   grad(idim,3,3,i) = grad(idim,3,3,i) + zdiff(3)*tempx3
-
-                  pre(idim,i) = pre(idim,i) - 2.0d0*dlv*r3inv
-     1                                      + 2.0d0*temp
+                  endif
                endif
 
             enddo
@@ -745,10 +805,139 @@ c     rotlet and doublet
  20         continue
          enddo
       enddo
+c$omp end parallel do
 
       return
 
  100  continue
 
+      return
+      end
+
+c**********************************************************************
+      subroutine st3ddirectstokg_opt(nd,sources,stoklet,ns,targ,nt,
+     1     ifppreg,pot,pre,grad,thresh)
+cf2py  intent(in) nd,sources,stoklet,ns,targ,nt,ifppreg,thresh
+cf2py  intent(out) pot,pre,grad
+c
+c     Optimized Stokeslet velocity with the st3ddirectstokg interface.
+c     All outputs retain additive semantics. Only ifppreg=1 is optimized;
+c     other output flags delegate to the original routine unchanged.
+c     Source components are packed once per call. A shared reciprocal
+c     distance and three scalar/vector accumulators replace repeated
+c     divisions and output updates. Normalization is once per target.
+c     nd=1 uses a SIMD source reduction (summation may be reordered).
+c     nd>1 shares geometry and vectorizes contiguous densities, keeping
+c     source summation order within each density. No fastmath is required.
+c     OpenMP targets own their outputs; nested worker teams are avoided.
+c
+c$    use omp_lib, only: omp_in_parallel
+      implicit none
+      integer*8 nd,ns,nt,ifppreg,i,j,k
+      real*8 sources(3,ns),stoklet(nd,3,ns),targ(3,nt)
+      real*8 pot(nd,3,nt),pre(nd,nt),grad(nd,3,3,nt),thresh
+      real*8, allocatable :: sx(:),sy(:),sz(:)
+      real*8, allocatable :: fx(:,:),fy(:,:),fz(:,:)
+      real*8, allocatable :: fx1(:),fy1(:),fz1(:)
+      real*8, allocatable :: ax(:),ay(:),az(:)
+      real*8 x,y,z,dx,dy,dz,r2,ri,ri3,dot,ux,uy,uz,threshsq
+      real*8, parameter :: inv8pi =
+     1    3.978873577297383394222094084313d-2
+
+      if (ifppreg .ne. 1) then
+         call st3ddirectstokg(nd,sources,stoklet,ns,targ,nt,
+     1        ifppreg,pot,pre,grad,thresh)
+         return
+      endif
+      if (ns .le. 0 .or. nt .le. 0 .or. nd .le. 0) return
+      threshsq=thresh**2
+      allocate(sx(ns),sy(ns),sz(ns))
+      sx=sources(1,:)
+      sy=sources(2,:)
+      sz=sources(3,:)
+
+      if (nd .eq. 1) then
+         allocate(fx1(ns),fy1(ns),fz1(ns))
+         fx1=stoklet(1,1,:)
+         fy1=stoklet(1,2,:)
+         fz1=stoklet(1,3,:)
+c$omp parallel do default(shared) schedule(static)
+c$omp& if (.not.omp_in_parallel() .and. nt*ns .ge. 4096)
+c$omp& private(i,j,x,y,z,dx,dy,dz,r2,ri,ri3,dot,ux,uy,uz)
+         do i=1,nt
+            x=targ(1,i)
+            y=targ(2,i)
+            z=targ(3,i)
+            ux=0.0d0
+            uy=0.0d0
+            uz=0.0d0
+c$omp simd reduction(+:ux,uy,uz)
+c$omp& private(dx,dy,dz,r2,ri,ri3,dot)
+            do j=1,ns
+               dx=x-sx(j)
+               dy=y-sy(j)
+               dz=z-sz(j)
+               r2=dx*dx+dy*dy+dz*dz
+               if (r2 .lt. threshsq) cycle
+               ri=1.0d0/sqrt(r2)
+               ri3=ri*ri*ri
+               dot=(dx*fx1(j)+dy*fy1(j)+dz*fz1(j))*ri3
+               ux=ux+fx1(j)*ri+dx*dot
+               uy=uy+fy1(j)*ri+dy*dot
+               uz=uz+fz1(j)*ri+dz*dot
+            enddo
+            pot(1,1,i)=pot(1,1,i)+inv8pi*ux
+            pot(1,2,i)=pot(1,2,i)+inv8pi*uy
+            pot(1,3,i)=pot(1,3,i)+inv8pi*uz
+         enddo
+c$omp end parallel do
+         deallocate(fx1,fy1,fz1)
+      else
+         allocate(fx(nd,ns),fy(nd,ns),fz(nd,ns))
+         fx=stoklet(:,1,:)
+         fy=stoklet(:,2,:)
+         fz=stoklet(:,3,:)
+c     Allocatable accumulators are private and allocated once per thread,
+c     not per target or pair. Densities remain contiguous in packed data.
+c$omp parallel default(shared)
+c$omp& if (.not.omp_in_parallel() .and. nt*ns .ge. 4096)
+c$omp& private(ax,ay,az,i,j,k,x,y,z,dx,dy,dz,r2,ri,ri3,dot)
+         allocate(ax(nd),ay(nd),az(nd))
+c$omp do schedule(static)
+         do i=1,nt
+            x=targ(1,i)
+            y=targ(2,i)
+            z=targ(3,i)
+            ax=0.0d0
+            ay=0.0d0
+            az=0.0d0
+            do j=1,ns
+               dx=x-sx(j)
+               dy=y-sy(j)
+               dz=z-sz(j)
+               r2=dx*dx+dy*dy+dz*dz
+               if (r2 .lt. threshsq) cycle
+               ri=1.0d0/sqrt(r2)
+               ri3=ri*ri*ri
+c$omp simd private(dot)
+               do k=1,nd
+                  dot=(dx*fx(k,j)+dy*fy(k,j)+dz*fz(k,j))*ri3
+                  ax(k)=ax(k)+fx(k,j)*ri+dx*dot
+                  ay(k)=ay(k)+fy(k,j)*ri+dy*dot
+                  az(k)=az(k)+fz(k,j)*ri+dz*dot
+               enddo
+            enddo
+            do k=1,nd
+               pot(k,1,i)=pot(k,1,i)+inv8pi*ax(k)
+               pot(k,2,i)=pot(k,2,i)+inv8pi*ay(k)
+               pot(k,3,i)=pot(k,3,i)+inv8pi*az(k)
+            enddo
+         enddo
+c$omp end do
+         deallocate(ax,ay,az)
+c$omp end parallel
+         deallocate(fx,fy,fz)
+      endif
+      deallocate(sx,sy,sz)
       return
       end

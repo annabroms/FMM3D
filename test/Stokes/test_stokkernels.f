@@ -17,7 +17,7 @@ c
       
       integer *8 ipass(5)
       integer *8 ns,nt,nd1,ndl,istress
-      integer *8 i,j,l,ntest,isum
+      integer *8 i,j,l,ntest,isum,ifdir
       complex *16 eye
 c
       data eye/(0.0d0,1.0d0)/
@@ -82,6 +82,7 @@ c
 c     test gradient of stokeslet formula
       
       thresh = 1d-15
+      ifdir = 3
       nd1 = 1
 
 
@@ -117,9 +118,9 @@ c     test gradient of stokeslet formula
       errmax = 0
       
       call st3ddirectstokg(nd1,source,stoklet,
-     1     ns,targ,nt,pot,pre,grad,thresh)
+     1     ns,targ,nt,ifdir,pot,pre,grad,thresh)
       call st3ddirectstokg(nd1,source,stoklet,
-     1     ns,targ2,nt,pot2,pre2,grad2,thresh)
+     1     ns,targ2,nt,ifdir,pot2,pre2,grad2,thresh)
 
       do i = 1,nt
          df = pot2(1,i) - pot(1,i)
@@ -189,9 +190,9 @@ c     test gradient of stokeslet and stresslet type I formula
       
       istress = 1
       call st3ddirectstokstrsg(nd1,source,stoklet,istress,
-     1     strslet,strsvec,ns,targ,nt,pot,pre,grad,thresh)
+     1     strslet,strsvec,ns,targ,nt,ifdir,pot,pre,grad,thresh)
       call st3ddirectstokstrsg(nd1,source,stoklet,istress,
-     1     strslet,strsvec,ns,targ2,nt,pot2,pre2,grad2,thresh)
+     1     strslet,strsvec,ns,targ2,nt,ifdir,pot2,pre2,grad2,thresh)
 
       do i = 1,nt
          df = pot2(1,i) - pot(1,i)
@@ -310,7 +311,7 @@ c     unpack laplace to stokes
 c     get stokes directly again
       
       call st3ddirectstokg(nd1,source,stoklet,
-     1     ns,targ,nt,pot,pre,grad,thresh)
+     1     ns,targ,nt,ifdir,pot,pre,grad,thresh)
 
       errmax = 0
       valmax = 0
@@ -433,7 +434,7 @@ c     get stokes directly again
       istress = 1
       nd1 = 1
       call st3ddirectstokstrsg(nd1,source,stoklet,istress,
-     1     strslet,strsvec,ns,targ,nt,pot,pre,grad,thresh)
+     1     strslet,strsvec,ns,targ,nt,ifdir,pot,pre,grad,thresh)
 
       errmax = 0
       valmax = 0

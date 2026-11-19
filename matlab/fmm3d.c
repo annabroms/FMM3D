@@ -1208,7 +1208,7 @@ MWF77_RETURN MWF77_l3ddirectcdh(int64_t*, double*, double*, double*, int64_t*, d
 MWF77_RETURN MWF77_emfmm3d(int64_t*, double*, dcomplex*, int64_t*, double*, int64_t*, dcomplex*, int64_t*, dcomplex*, int64_t*, dcomplex*, int64_t*, double*, int64_t*, dcomplex*, int64_t*, dcomplex*, int64_t*, dcomplex*, int64_t*);
 MWF77_RETURN MWF77_em3ddirect(int64_t*, dcomplex*, int64_t*, double*, int64_t*, dcomplex*, int64_t*, dcomplex*, int64_t*, dcomplex*, int64_t*, double*, int64_t*, dcomplex*, int64_t*, dcomplex*, int64_t*, dcomplex*, double*);
 MWF77_RETURN MWF77_stfmm3d(int64_t*, double*, int64_t*, double*, int64_t*, double*, int64_t*, double*, double*, int64_t*, double*, double*, int64_t*, double*, double*, int64_t*, double*, double*, double*, int64_t*, double*, int64_t*, double*, double*, double*, int64_t*);
-MWF77_RETURN MWF77_st3ddirectstokstrsrotdoubg(int64_t*, double*, double*, int64_t*, double*, double*, int64_t*, double*, double*, int64_t*, double*, double*, int64_t*, double*, int64_t*, double*, double*, double*, double*);
+MWF77_RETURN MWF77_st3ddirectstokstrsrotdoubg(int64_t*, double*, double*, int64_t*, double*, double*, int64_t*, double*, double*, int64_t*, double*, double*, int64_t*, double*, int64_t*, int64_t*, double*, double*, double*, double*);
 
 #ifdef __cplusplus
 } /* end extern C */
@@ -7303,9 +7303,9 @@ mw_err_label:
 }
 
 /* ---- fmm3d.mw: 1272 ----
- * st3ddirectstokstrsrotdoubg(int64_t[1] nd, double[3, ns] sources, double[nd3, ns_stok] stoklet, int64_t[1] ifstrslet, double[nd3, ns_strs] strslet, double[nd3, ns_strs] strsvec, int64_t[1] ifrotlet, double[nd3, ns_rot] rotlet, double[nd3, ns_rot] rotvec, int64_t[1] ifdoublet, double[nd3, ns_doub] doublet, double[nd3, ns_doub] doubvec, int64_t[1] ns, double[3, nt] targ, int64_t[1] nt, inout double[nd3, nt] pottarg, inout double[nd, nt] pretarg, inout double[nd9, nt] gradtarg, double[1] thresh);
+ * st3ddirectstokstrsrotdoubg(int64_t[1] nd, double[3, ns] sources, double[nd3, ns_stok] stoklet, int64_t[1] ifstrslet, double[nd3, ns_strs] strslet, double[nd3, ns_strs] strsvec, int64_t[1] ifrotlet, double[nd3, ns_rot] rotlet, double[nd3, ns_rot] rotvec, int64_t[1] ifdoublet, double[nd3, ns_doub] doublet, double[nd3, ns_doub] doubvec, int64_t[1] ns, double[3, nt] targ, int64_t[1] nt, int64_t[1] ifppregtarg, inout double[nd3, nt] pottarg, inout double[nd, nt] pretarg, inout double[nd9, nt] gradtarg, double[1] thresh);
  */
-static const char* stubids23_ = "st3ddirectstokstrsrotdoubg(c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i int64_t[x], c io double[xx], c io double[xx], c io double[xx], c i double[x])";
+static const char* stubids23_ = "st3ddirectstokstrsrotdoubg(c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i int64_t[x], c i int64_t[x], c io double[xx], c io double[xx], c io double[xx], c i double[x])";
 
 void mexStub23(int nlhs, mxArray* plhs[],
               int nrhs, const mxArray* prhs[])
@@ -7326,43 +7326,44 @@ void mexStub23(int nlhs, mxArray* plhs[],
     int64_t*    in12_ =0; /* ns         */
     double*     in13_ =0; /* targ       */
     int64_t*    in14_ =0; /* nt         */
-    double*     in15_ =0; /* pottarg    */
-    double*     in16_ =0; /* pretarg    */
-    double*     in17_ =0; /* gradtarg   */
-    double*     in18_ =0; /* thresh     */
-    mwSize      dim19_;   /* 1          */
-    mwSize      dim20_;   /* 3          */
-    mwSize      dim21_;   /* ns         */
-    mwSize      dim22_;   /* nd3        */
-    mwSize      dim23_;   /* ns_stok    */
-    mwSize      dim24_;   /* 1          */
-    mwSize      dim25_;   /* nd3        */
-    mwSize      dim26_;   /* ns_strs    */
-    mwSize      dim27_;   /* nd3        */
-    mwSize      dim28_;   /* ns_strs    */
-    mwSize      dim29_;   /* 1          */
-    mwSize      dim30_;   /* nd3        */
-    mwSize      dim31_;   /* ns_rot     */
-    mwSize      dim32_;   /* nd3        */
-    mwSize      dim33_;   /* ns_rot     */
-    mwSize      dim34_;   /* 1          */
-    mwSize      dim35_;   /* nd3        */
-    mwSize      dim36_;   /* ns_doub    */
-    mwSize      dim37_;   /* nd3        */
-    mwSize      dim38_;   /* ns_doub    */
-    mwSize      dim39_;   /* 1          */
-    mwSize      dim40_;   /* 3          */
-    mwSize      dim41_;   /* nt         */
-    mwSize      dim42_;   /* 1          */
-    mwSize      dim43_;   /* nd3        */
-    mwSize      dim44_;   /* nt         */
-    mwSize      dim45_;   /* nd         */
+    int64_t*    in15_ =0; /* ifppregtarg */
+    double*     in16_ =0; /* pottarg    */
+    double*     in17_ =0; /* pretarg    */
+    double*     in18_ =0; /* gradtarg   */
+    double*     in19_ =0; /* thresh     */
+    mwSize      dim20_;   /* 1          */
+    mwSize      dim21_;   /* 3          */
+    mwSize      dim22_;   /* ns         */
+    mwSize      dim23_;   /* nd3        */
+    mwSize      dim24_;   /* ns_stok    */
+    mwSize      dim25_;   /* 1          */
+    mwSize      dim26_;   /* nd3        */
+    mwSize      dim27_;   /* ns_strs    */
+    mwSize      dim28_;   /* nd3        */
+    mwSize      dim29_;   /* ns_strs    */
+    mwSize      dim30_;   /* 1          */
+    mwSize      dim31_;   /* nd3        */
+    mwSize      dim32_;   /* ns_rot     */
+    mwSize      dim33_;   /* nd3        */
+    mwSize      dim34_;   /* ns_rot     */
+    mwSize      dim35_;   /* 1          */
+    mwSize      dim36_;   /* nd3        */
+    mwSize      dim37_;   /* ns_doub    */
+    mwSize      dim38_;   /* nd3        */
+    mwSize      dim39_;   /* ns_doub    */
+    mwSize      dim40_;   /* 1          */
+    mwSize      dim41_;   /* 3          */
+    mwSize      dim42_;   /* nt         */
+    mwSize      dim43_;   /* 1          */
+    mwSize      dim44_;   /* 1          */
+    mwSize      dim45_;   /* nd3        */
     mwSize      dim46_;   /* nt         */
-    mwSize      dim47_;   /* nd9        */
+    mwSize      dim47_;   /* nd         */
     mwSize      dim48_;   /* nt         */
-    mwSize      dim49_;   /* 1          */
+    mwSize      dim49_;   /* nd9        */
+    mwSize      dim50_;   /* nt         */
+    mwSize      dim51_;   /* 1          */
 
-    dim19_ = (mwSize) mxWrapGetScalar(prhs[19], &mw_err_txt_);
     dim20_ = (mwSize) mxWrapGetScalar(prhs[20], &mw_err_txt_);
     dim21_ = (mwSize) mxWrapGetScalar(prhs[21], &mw_err_txt_);
     dim22_ = (mwSize) mxWrapGetScalar(prhs[22], &mw_err_txt_);
@@ -7393,110 +7394,117 @@ void mexStub23(int nlhs, mxArray* plhs[],
     dim47_ = (mwSize) mxWrapGetScalar(prhs[47], &mw_err_txt_);
     dim48_ = (mwSize) mxWrapGetScalar(prhs[48], &mw_err_txt_);
     dim49_ = (mwSize) mxWrapGetScalar(prhs[49], &mw_err_txt_);
+    dim50_ = (mwSize) mxWrapGetScalar(prhs[50], &mw_err_txt_);
+    dim51_ = (mwSize) mxWrapGetScalar(prhs[51], &mw_err_txt_);
 
-    if (mxGetM(prhs[0])*mxGetN(prhs[0]) != dim19_) {
+    if (mxGetM(prhs[0])*mxGetN(prhs[0]) != dim20_) {
         mw_err_txt_ = "Bad argument size: nd";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[1]) != dim20_ ||
-        mxGetN(prhs[1]) != dim21_) {
+    if (mxGetM(prhs[1]) != dim21_ ||
+        mxGetN(prhs[1]) != dim22_) {
         mw_err_txt_ = "Bad argument size: sources";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[2]) != dim22_ ||
-        mxGetN(prhs[2]) != dim23_) {
+    if (mxGetM(prhs[2]) != dim23_ ||
+        mxGetN(prhs[2]) != dim24_) {
         mw_err_txt_ = "Bad argument size: stoklet";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[3])*mxGetN(prhs[3]) != dim24_) {
+    if (mxGetM(prhs[3])*mxGetN(prhs[3]) != dim25_) {
         mw_err_txt_ = "Bad argument size: ifstrslet";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[4]) != dim25_ ||
-        mxGetN(prhs[4]) != dim26_) {
+    if (mxGetM(prhs[4]) != dim26_ ||
+        mxGetN(prhs[4]) != dim27_) {
         mw_err_txt_ = "Bad argument size: strslet";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[5]) != dim27_ ||
-        mxGetN(prhs[5]) != dim28_) {
+    if (mxGetM(prhs[5]) != dim28_ ||
+        mxGetN(prhs[5]) != dim29_) {
         mw_err_txt_ = "Bad argument size: strsvec";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[6])*mxGetN(prhs[6]) != dim29_) {
+    if (mxGetM(prhs[6])*mxGetN(prhs[6]) != dim30_) {
         mw_err_txt_ = "Bad argument size: ifrotlet";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[7]) != dim30_ ||
-        mxGetN(prhs[7]) != dim31_) {
+    if (mxGetM(prhs[7]) != dim31_ ||
+        mxGetN(prhs[7]) != dim32_) {
         mw_err_txt_ = "Bad argument size: rotlet";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[8]) != dim32_ ||
-        mxGetN(prhs[8]) != dim33_) {
+    if (mxGetM(prhs[8]) != dim33_ ||
+        mxGetN(prhs[8]) != dim34_) {
         mw_err_txt_ = "Bad argument size: rotvec";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[9])*mxGetN(prhs[9]) != dim34_) {
+    if (mxGetM(prhs[9])*mxGetN(prhs[9]) != dim35_) {
         mw_err_txt_ = "Bad argument size: ifdoublet";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[10]) != dim35_ ||
-        mxGetN(prhs[10]) != dim36_) {
+    if (mxGetM(prhs[10]) != dim36_ ||
+        mxGetN(prhs[10]) != dim37_) {
         mw_err_txt_ = "Bad argument size: doublet";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[11]) != dim37_ ||
-        mxGetN(prhs[11]) != dim38_) {
+    if (mxGetM(prhs[11]) != dim38_ ||
+        mxGetN(prhs[11]) != dim39_) {
         mw_err_txt_ = "Bad argument size: doubvec";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[12])*mxGetN(prhs[12]) != dim39_) {
+    if (mxGetM(prhs[12])*mxGetN(prhs[12]) != dim40_) {
         mw_err_txt_ = "Bad argument size: ns";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[13]) != dim40_ ||
-        mxGetN(prhs[13]) != dim41_) {
+    if (mxGetM(prhs[13]) != dim41_ ||
+        mxGetN(prhs[13]) != dim42_) {
         mw_err_txt_ = "Bad argument size: targ";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[14])*mxGetN(prhs[14]) != dim42_) {
+    if (mxGetM(prhs[14])*mxGetN(prhs[14]) != dim43_) {
         mw_err_txt_ = "Bad argument size: nt";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[15]) != dim43_ ||
-        mxGetN(prhs[15]) != dim44_) {
-        mw_err_txt_ = "Bad argument size: pottarg";
+    if (mxGetM(prhs[15])*mxGetN(prhs[15]) != dim44_) {
+        mw_err_txt_ = "Bad argument size: ifppregtarg";
         goto mw_err_label;
     }
 
     if (mxGetM(prhs[16]) != dim45_ ||
         mxGetN(prhs[16]) != dim46_) {
-        mw_err_txt_ = "Bad argument size: pretarg";
+        mw_err_txt_ = "Bad argument size: pottarg";
         goto mw_err_label;
     }
 
     if (mxGetM(prhs[17]) != dim47_ ||
         mxGetN(prhs[17]) != dim48_) {
+        mw_err_txt_ = "Bad argument size: pretarg";
+        goto mw_err_label;
+    }
+
+    if (mxGetM(prhs[18]) != dim49_ ||
+        mxGetN(prhs[18]) != dim50_) {
         mw_err_txt_ = "Bad argument size: gradtarg";
         goto mw_err_label;
     }
 
-    if (mxGetM(prhs[18])*mxGetN(prhs[18]) != dim49_) {
+    if (mxGetM(prhs[19])*mxGetN(prhs[19]) != dim51_) {
         mw_err_txt_ = "Bad argument size: thresh";
         goto mw_err_label;
     }
@@ -7679,7 +7687,7 @@ void mexStub23(int nlhs, mxArray* plhs[],
         in14_ = NULL;
 
     if (mxGetM(prhs[15])*mxGetN(prhs[15]) != 0) {
-        in15_ = mxWrapGetArray_double(prhs[15], &mw_err_txt_);
+        in15_ = mxWrapGetArray_int64_t(prhs[15], &mw_err_txt_);
         if (mw_err_txt_)
             goto mw_err_label;
     } else
@@ -7700,29 +7708,36 @@ void mexStub23(int nlhs, mxArray* plhs[],
         in17_ = NULL;
 
     if (mxGetM(prhs[18])*mxGetN(prhs[18]) != 0) {
-        if( mxGetClassID(prhs[18]) != mxDOUBLE_CLASS )
-            mw_err_txt_ = "Invalid array argument, mxDOUBLE_CLASS expected";
-        if (mw_err_txt_) goto mw_err_label;
-#if MX_HAS_INTERLEAVED_COMPLEX
-        if( mxIsComplex(prhs[18]) )
-            mw_err_txt_ = "Invalid array argument, real data expected";
-        if (mw_err_txt_) goto mw_err_label;
-        in18_ = mxGetDoubles(prhs[18]);
-#else
-        in18_ = mxGetPr(prhs[18]);
-#endif
+        in18_ = mxWrapGetArray_double(prhs[18], &mw_err_txt_);
+        if (mw_err_txt_)
+            goto mw_err_label;
     } else
         in18_ = NULL;
 
+    if (mxGetM(prhs[19])*mxGetN(prhs[19]) != 0) {
+        if( mxGetClassID(prhs[19]) != mxDOUBLE_CLASS )
+            mw_err_txt_ = "Invalid array argument, mxDOUBLE_CLASS expected";
+        if (mw_err_txt_) goto mw_err_label;
+#if MX_HAS_INTERLEAVED_COMPLEX
+        if( mxIsComplex(prhs[19]) )
+            mw_err_txt_ = "Invalid array argument, real data expected";
+        if (mw_err_txt_) goto mw_err_label;
+        in19_ = mxGetDoubles(prhs[19]);
+#else
+        in19_ = mxGetPr(prhs[19]);
+#endif
+    } else
+        in19_ = NULL;
+
     if (mexprofrecord_)
         mexprofrecord_[23]++;
-    MWF77_st3ddirectstokstrsrotdoubg(in0_, in1_, in2_, in3_, in4_, in5_, in6_, in7_, in8_, in9_, in10_, in11_, in12_, in13_, in14_, in15_, in16_, in17_, in18_);
-    plhs[0] = mxCreateDoubleMatrix(dim43_, dim44_, mxREAL);
-    mxWrapCopy_double(plhs[0], in15_, dim43_*dim44_);
-    plhs[1] = mxCreateDoubleMatrix(dim45_, dim46_, mxREAL);
-    mxWrapCopy_double(plhs[1], in16_, dim45_*dim46_);
-    plhs[2] = mxCreateDoubleMatrix(dim47_, dim48_, mxREAL);
-    mxWrapCopy_double(plhs[2], in17_, dim47_*dim48_);
+    MWF77_st3ddirectstokstrsrotdoubg(in0_, in1_, in2_, in3_, in4_, in5_, in6_, in7_, in8_, in9_, in10_, in11_, in12_, in13_, in14_, in15_, in16_, in17_, in18_, in19_);
+    plhs[0] = mxCreateDoubleMatrix(dim45_, dim46_, mxREAL);
+    mxWrapCopy_double(plhs[0], in16_, dim45_*dim46_);
+    plhs[1] = mxCreateDoubleMatrix(dim47_, dim48_, mxREAL);
+    mxWrapCopy_double(plhs[1], in17_, dim47_*dim48_);
+    plhs[2] = mxCreateDoubleMatrix(dim49_, dim50_, mxREAL);
+    mxWrapCopy_double(plhs[2], in18_, dim49_*dim50_);
 
 mw_err_label:
     if (in0_)  mxFree(in0_);
@@ -7734,6 +7749,7 @@ mw_err_label:
     if (in15_)  mxFree(in15_);
     if (in16_)  mxFree(in16_);
     if (in17_)  mxFree(in17_);
+    if (in18_)  mxFree(in18_);
     if (mw_err_txt_)
         mexErrMsgTxt(mw_err_txt_);
 }

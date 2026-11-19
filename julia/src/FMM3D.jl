@@ -1725,7 +1725,7 @@ function st3ddir(sources::Array{Float64},targets::Array{Float64};
     anyfail, n, nt, ifstoklet, ifstrslet, ifrotlet, ifdoublet = (
         stfmm3dinputcheck(sources,stoklet,strslet,strsvec,rotlet,rotvec,doublet,doubvec,targets,ppreg,ppregt,nd))
 
-    if anyfail
+    if anyfail || ppregt < 1
         return vals
     end
 
@@ -1735,11 +1735,8 @@ function st3ddir(sources::Array{Float64},targets::Array{Float64};
     if (ifdoublet == 0); doublet = zero3; doubvec=zero3 end
     if (nt == 0); targets = zero3 end
 
-    # allocate memory for return values
-
-    # for now we always allocate all quantities
-    # and return requested
-    
+    # the output arrays are passed full size; the Fortran routine only
+    # fills the quantities requested by ppregt
     if nd > 1
         pottarg = zeros(Float64,nd,3,nt)
     else
@@ -1765,7 +1762,7 @@ function st3ddir(sources::Array{Float64},targets::Array{Float64};
                              ifstrslet,strslet,strsvec,
                              ifrotlet,rotlet,rotvec,
                              ifdoublet,doublet,doubvec,
-                             n,targets,nt,pottarg,
+                             n,targets,nt,ppregt,pottarg,
                              pretarg,gradtarg,thresh)
     else
         stoklet = zeros(Float64,nd,3,n)
@@ -1773,7 +1770,7 @@ function st3ddir(sources::Array{Float64},targets::Array{Float64};
                              ifstrslet,strslet,strsvec,
                              ifrotlet,rotlet,rotvec,
                              ifdoublet,doublet,doubvec,
-                             n,targets,nt,pottarg,
+                             n,targets,nt,ppregt,pottarg,
                              pretarg,gradtarg,thresh)
     end
     
@@ -1788,32 +1785,32 @@ end
 
 function st3ddirectstokstrsrotdoubg!(nd,sources,stoklet,istress,
                               strslet,strsvec,irotlet,rotlet,rotvec,idoublet,doublet,doubvec,
-                              n,targets,nt,pottarg,pretarg,gradtarg,thresh)
+                              n,targets,nt,ifppreg,pottarg,pretarg,gradtarg,thresh)
     ccall((:st3ddirectstokstrsrotdoubg_,libfmm3d),Cvoid,(Fi,Fd,Fd,Fi,Fd,Fd,
                                                          Fi,Fd,Fd,Fi,Fd,Fd,Fi,
-                                                         Fd,Fi,Fd,Fd,Fd,Fd),
+                                                         Fd,Fi,Fi,Fd,Fd,Fd,Fd),
           nd,sources,stoklet,istress,
           strslet,strsvec,irotlet,rotlet,rotvec,idoublet,doublet,doubvec,
-          n,targets,nt,pottarg,pretarg,gradtarg,thresh)
+          n,targets,nt,ifppreg,pottarg,pretarg,gradtarg,thresh)
     return
 end
 
 function st3ddirectstokstrsg!(nd,sources,stoklet,istress,
-                              strslet,strsvec,n,targets,nt,pottarg,
+                              strslet,strsvec,n,targets,nt,ifppreg,pottarg,
                               pretarg,gradtarg,thresh)
     ccall((:st3ddirectstokstrsg_,libfmm3d),Cvoid,(Fi,Fd,Fd,Fi,Fd,Fd,Fi,
-                                                  Fd,Fi,Fd,Fd,Fd,Fd),
+                                                  Fd,Fi,Fi,Fd,Fd,Fd,Fd),
           nd,sources,stoklet,istress,
-                              strslet,strsvec,n,targets,nt,pottarg,
+                              strslet,strsvec,n,targets,nt,ifppreg,pottarg,
           pretarg,gradtarg,thresh)
     return
 end
 
-function st3ddirectstokg!(nd,sources,stoklet,n,targets,nt,pottarg,
+function st3ddirectstokg!(nd,sources,stoklet,n,targets,nt,ifppreg,pottarg,
                               pretarg,gradtarg,thresh)
-    ccall((:st3ddirectstokg_,libfmm3d),Cvoid,(Fi,Fd,Fd,Fi,Fd,Fi,Fd,
+    ccall((:st3ddirectstokg_,libfmm3d),Cvoid,(Fi,Fd,Fd,Fi,Fd,Fi,Fi,Fd,
                                               Fd,Fd,Fd),
-          nd,sources,stoklet,n,targets,nt,pottarg,
+          nd,sources,stoklet,n,targets,nt,ifppreg,pottarg,
           pretarg,gradtarg,thresh)
     return
 end

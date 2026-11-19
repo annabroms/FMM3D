@@ -112,8 +112,8 @@ function [U] = st3ddir(srcinfo,targ,ifppregtarg)
   nd9 = 9*nd;
   ier = 0;
 
-  mex_id_ = 'st3ddirectstokstrsrotdoubg(c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i int64_t[x], c io double[xx], c io double[xx], c io double[xx], c i double[x])';
-[pottarg, pretarg, gradtarg] = fmm3d(mex_id_, nd, sources, stoklet, ifstrslet, strslet, strsvec, ifrotlet, rotlet, rotvec, ifdoublet, doublet, doubvec, ns, targ, nt, pottarg, pretarg, gradtarg, thresh, 1, 3, ns, nd3, ns_stok, 1, nd3, ns_strs, nd3, ns_strs, 1, nd3, ns_rot, nd3, ns_rot, 1, nd3, ns_doub, nd3, ns_doub, 1, 3, nt, 1, nd3, nt, nd, nt, nd9, nt, 1);
+  mex_id_ = 'st3ddirectstokstrsrotdoubg(c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i double[xx], c i int64_t[x], c i double[xx], c i int64_t[x], c i int64_t[x], c io double[xx], c io double[xx], c io double[xx], c i double[x])';
+[pottarg, pretarg, gradtarg] = fmm3d(mex_id_, nd, sources, stoklet, ifstrslet, strslet, strsvec, ifrotlet, rotlet, rotvec, ifdoublet, doublet, doubvec, ns, targ, nt, ifppregtarg, pottarg, pretarg, gradtarg, thresh, 1, 3, ns, nd3, ns_stok, 1, nd3, ns_strs, nd3, ns_strs, 1, nd3, ns_rot, nd3, ns_rot, 1, nd3, ns_doub, nd3, ns_doub, 1, 3, nt, 1, 1, nd3, nt, nd, nt, nd9, nt, 1);
 
   U.pottarg = [];
   U.pretarg = [];

@@ -26,7 +26,7 @@ c
       integer *8 ipass(4)
       integer *8 istoklet, istress, irotlet, idoublet
       integer *8 i,j,k,nd,ns,nt,ntest,nd1,ier,isum
-      integer *8 ifppgreg, ifppregtarg
+      integer *8 ifppgreg, ifppregtarg, ifdir
       complex *16 eye
 c
       data eye/(0.0d0,1.0d0)/
@@ -110,6 +110,7 @@ c
 c     test gradient of rotlet formula
 
       thresh = 1d-15
+      ifdir = 3
       nd1 = 1
 
       do i = 1,nt
@@ -192,11 +193,11 @@ c     test gradient of rotlet formula
       call st3ddirectstokstrsrotdoubg(nd1,source,stoklet,istress,
      1     strslet,strsvec,irotlet,rotstr,rotvec,
      2     idoublet,doubstr,doubvec,
-     3     ns,targ,nt,pot,pre,grad,thresh)
+     3     ns,targ,nt,ifdir,pot,pre,grad,thresh)
       call st3ddirectstokstrsrotdoubg(nd1,source,stoklet,istress,
      1     strslet,strsvec,irotlet,rotstr,rotvec,
      2     idoublet,doubstr,doubvec,
-     3     ns,targ2,nt,pot2,pre2,grad2,thresh)
+     3     ns,targ2,nt,ifdir,pot2,pre2,grad2,thresh)
 
 
       do i = 1,nt
