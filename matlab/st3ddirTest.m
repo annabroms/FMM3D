@@ -19,7 +19,7 @@ clear; close all;
 rng(927)
 
 tol = 1e-12;
-% source_counts = [4096 32768 131072];
+source_counts = [32768 131072];
 source_counts = [4096 32768];
 target_counts = source_counts;
 nrepeat = 3;
@@ -156,39 +156,6 @@ for k = 1:ncase
         seconds(1)/seconds(3),err);
 end
 rows = vertcat(rows{:});
-
-%% 4. Save the results
-% The .mat and .json files hold every timing sample and the run settings;
-% the .csv file holds the table printed above. Both MEX files are recorded,
-% and the compiler flags used to build them are in make.inc.
-result = struct('timestamp',char(datetime('now','TimeZone','UTC')), ...
-    'matlab',version,'OMP_NUM_THREADS',getenv('OMP_NUM_THREADS'), ...
-    'OMP_DYNAMIC',getenv('OMP_DYNAMIC'),'repeats',nrepeat, ...
-    'methods',{{'original_velocity_pressure_gradient','original_velocity', ...
-                'opt_velocity'}}, ...
-    'scope','MATLAB wrapper and MEX allocation, packing and complete evaluation', ...
-    'threshold',1e-15,'validation_passed',true,'benchmarks',rows);
-result.mex = struct('fmm3d',which('fmm3d'),'st3ddir_opt_mex',which('st3ddir_opt_mex'));
-
-if ~exist(output_folder,'dir'), mkdir(output_folder); end
-stem = fullfile(output_folder,sprintf('st3ddirTest-threads-%d',threads));
-save([stem,'.mat'],'result');
-
-fid = fopen([stem,'.json'],'w');
-fprintf(fid,'%s\n',jsonencode(result,PrettyPrint=true));
-fclose(fid);
-
-timings = vertcat(rows.seconds);
-timing_table = table([rows.ns]',[rows.nt]',[rows.nd]',[rows.threads]', ...
-    timings(:,1),timings(:,2),timings(:,3), ...
-    [rows.speedup_full_over_velocity]',[rows.speedup_velocity_over_opt]', ...
-    [rows.speedup_full_over_opt]',[rows.relative_velocity_error]', ...
-    'VariableNames',{'sources','targets','densities','threads', ...
-    'full_seconds','velocity_seconds','opt_seconds', ...
-    'full_over_velocity','velocity_over_opt','full_over_opt','relative_error'});
-writetable(timing_table,[stem,'.csv']);
-
-fprintf('\nAll checks passed. Results saved to %s.{mat,json,csv}\n',stem);
 
 
 function err = relative_difference(observed, expected)
