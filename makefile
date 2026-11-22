@@ -121,6 +121,20 @@ LOBJS = $(LAP)/lwtsexp_sep1.o $(LAP)/l3dterms.o $(LAP)/l3dtrans.o \
 STOK = src/Stokes
 STOBJS = $(STOK)/stfmm3d.o $(STOK)/stokkernels.o
 
+# Extra flags for the Stokes direct-sum kernels in stokkernels.f only
+# (st3ddir, st3ddir_opt; stfmm3d does not call them). Architecture flags
+# (-march) come from FFLAGS/make.inc; make.inc may also set STOKDIRFLAGS.
+# -ffast-math alone gives no speedup; it vectorizes sqrt/division only
+# together with AVX2, e.g. in make.inc:
+#   STOKDIRFLAGS = -march=x86-64-v3 -ffast-math   (~3x faster st3ddir_opt)
+# Binaries built with -march=x86-64-v3 (or -march=native) crash with
+# "illegal instruction" on CPUs without AVX2 (older or low-end x86, roughly
+# pre-2013 Intel / pre-2015 AMD) and do not compile for non-x86 targets.
+# Only use it on machines where the binaries will run.
+# Disable all extra flags with: make STOKDIRFLAGS=
+STOKDIRFLAGS ?= -ffast-math
+$(STOK)/stokkernels.o: FFLAGS += $(STOKDIRFLAGS)
+
 # Maxwell objects
 EM = src/Maxwell
 EMOBJS = $(EM)/emfmm3d.o

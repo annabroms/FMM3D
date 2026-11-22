@@ -11,9 +11,6 @@
 % before starting MATLAB, e.g. from the FMM3D root:
 %
 %   OMP_NUM_THREADS=8 matlab -batch "addpath('matlab'); st3ddirTest"
-%
-% Results are saved as st3ddirTest-threads-<n>.mat, .json and .csv in
-% matlab/results/st3ddirTest (ignored by git).
 
 clear; close all;
 rng(927)
@@ -23,7 +20,6 @@ source_counts = [32768 131072];
 source_counts = [4096 32768];
 target_counts = source_counts;
 nrepeat = 3;
-output_folder = fullfile(fileparts(mfilename('fullpath')),'results','st3ddirTest');
 
 %% 1. st3ddir_opt agrees with st3ddir
 % Several numbers of densities nd and all three output flags:
@@ -110,7 +106,6 @@ fprintf('ratios show speedups.\n');
 fprintf('%8s %8s %3s %12s %12s %12s %9s %9s %9s %10s\n','ns','nt','nd', ...
     'full','velocity','opt','full/vel','vel/opt','full/opt','rel. diff');
 
-rows = cell(ncase,1);
 for k = 1:ncase
     clear srcinfo
     ns = case_ns(k);
@@ -145,17 +140,10 @@ for k = 1:ncase
               relative_difference(U{3}.pottarg,U{1}.pottarg));
     assert(err < tol,'Timed velocities differ by %.2e',err);
 
-    rows{k} = struct('ns',ns,'nt',nt,'nd',nd,'threads',threads, ...
-        'samples',samples,'seconds',seconds, ...
-        'speedup_full_over_velocity',seconds(1)/seconds(2), ...
-        'speedup_velocity_over_opt',seconds(2)/seconds(3), ...
-        'speedup_full_over_opt',seconds(1)/seconds(3), ...
-        'relative_velocity_error',err);
     fprintf('%8d %8d %3d %12.6g %12.6g %12.6g %8.2fx %8.2fx %8.2fx %10.2e\n', ...
         ns,nt,nd,seconds,seconds(1)/seconds(2),seconds(2)/seconds(3), ...
         seconds(1)/seconds(3),err);
 end
-rows = vertcat(rows{:});
 
 
 function err = relative_difference(observed, expected)

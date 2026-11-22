@@ -24,6 +24,3 @@ lib/*
 sbatch*
 *.obj
 make.inc
-
-# MATLAB timing outputs (machine-specific)
-matlab/results/

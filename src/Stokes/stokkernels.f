@@ -941,3 +941,157 @@ c$omp end parallel
       deallocate(sx,sy,sz)
       return
       end
+c
+c
+c
+c
+      subroutine st3ddirectstrsg_opt(nd,sources,strslet,strsvec,ns,
+     1     targ,nt,ifppreg,pot,pre,grad,thresh)
+cf2py  intent(in) nd,sources,strslet,strsvec,ns,targ,nt,ifppreg,thresh
+cf2py  intent(out) pot,pre,grad
+c
+c     Optimized type I stresslet velocity, without a Stokeslet term:
+c
+c       pot(x) = pot(x) + sum_m T_{ijk}(x,y^{(m)}) mu^{(m)}_j nu^{(m)}_k
+c
+c     with the kernel, sign and scaling of st3ddirectstokstrsg (see top
+c     of file); strslet holds mu and strsvec holds nu, both (nd,3,ns).
+c     All outputs retain additive semantics. Only ifppreg=1 is
+c     optimized; other output flags delegate to st3ddirectstokstrsg
+c     with zero Stokeslet strengths, so their results are unchanged.
+c     Source components are packed once per call. One reciprocal
+c     distance per pair gives 1/r^5; three scalar/vector accumulators
+c     replace per-pair output updates; 3/(4 pi) is applied once per
+c     target. nd=1 uses a SIMD source reduction (summation may be
+c     reordered). nd>1 shares geometry and vectorizes contiguous
+c     densities, keeping source summation order within each density.
+c     OpenMP targets own their outputs; nested worker teams are avoided.
+c
+c$    use omp_lib, only: omp_in_parallel
+      implicit none
+      integer*8 nd,ns,nt,ifppreg,i,j,k,istress
+      real*8 sources(3,ns),strslet(nd,3,ns),strsvec(nd,3,ns)
+      real*8 targ(3,nt)
+      real*8 pot(nd,3,nt),pre(nd,nt),grad(nd,3,3,nt),thresh
+      real*8, allocatable :: sx(:),sy(:),sz(:)
+      real*8, allocatable :: mx(:,:),my(:,:),mz(:,:)
+      real*8, allocatable :: vx(:,:),vy(:,:),vz(:,:)
+      real*8, allocatable :: mx1(:),my1(:),mz1(:)
+      real*8, allocatable :: vx1(:),vy1(:),vz1(:)
+      real*8, allocatable :: ax(:),ay(:),az(:),zstok(:,:,:)
+      real*8 x,y,z,dx,dy,dz,r2,ri,ri5,s,ux,uy,uz,threshsq
+      real*8, parameter :: c3inv4pi =
+     1    2.387324146378430036533256450587713d-1
+
+      if (ifppreg .ne. 1) then
+         allocate(zstok(nd,3,ns))
+         zstok=0.0d0
+         istress=1
+         call st3ddirectstokstrsg(nd,sources,zstok,istress,
+     1        strslet,strsvec,ns,targ,nt,ifppreg,pot,pre,grad,thresh)
+         deallocate(zstok)
+         return
+      endif
+      if (ns .le. 0 .or. nt .le. 0 .or. nd .le. 0) return
+      threshsq=thresh**2
+      allocate(sx(ns),sy(ns),sz(ns))
+      sx=sources(1,:)
+      sy=sources(2,:)
+      sz=sources(3,:)
+
+      if (nd .eq. 1) then
+         allocate(mx1(ns),my1(ns),mz1(ns),vx1(ns),vy1(ns),vz1(ns))
+         mx1=strslet(1,1,:)
+         my1=strslet(1,2,:)
+         mz1=strslet(1,3,:)
+         vx1=strsvec(1,1,:)
+         vy1=strsvec(1,2,:)
+         vz1=strsvec(1,3,:)
+c$omp parallel do default(shared) schedule(static)
+c$omp& if (.not.omp_in_parallel() .and. nt*ns .ge. 4096)
+c$omp& private(i,j,x,y,z,dx,dy,dz,r2,ri,ri5,s,ux,uy,uz)
+         do i=1,nt
+            x=targ(1,i)
+            y=targ(2,i)
+            z=targ(3,i)
+            ux=0.0d0
+            uy=0.0d0
+            uz=0.0d0
+c$omp simd reduction(+:ux,uy,uz)
+c$omp& private(dx,dy,dz,r2,ri,ri5,s)
+            do j=1,ns
+               dx=x-sx(j)
+               dy=y-sy(j)
+               dz=z-sz(j)
+               r2=dx*dx+dy*dy+dz*dz
+               if (r2 .lt. threshsq) cycle
+               ri=1.0d0/sqrt(r2)
+               ri5=ri*ri
+               ri5=ri5*ri5*ri
+               s=(dx*mx1(j)+dy*my1(j)+dz*mz1(j))*
+     1           (dx*vx1(j)+dy*vy1(j)+dz*vz1(j))*ri5
+               ux=ux+dx*s
+               uy=uy+dy*s
+               uz=uz+dz*s
+            enddo
+            pot(1,1,i)=pot(1,1,i)+c3inv4pi*ux
+            pot(1,2,i)=pot(1,2,i)+c3inv4pi*uy
+            pot(1,3,i)=pot(1,3,i)+c3inv4pi*uz
+         enddo
+c$omp end parallel do
+         deallocate(mx1,my1,mz1,vx1,vy1,vz1)
+      else
+         allocate(mx(nd,ns),my(nd,ns),mz(nd,ns))
+         allocate(vx(nd,ns),vy(nd,ns),vz(nd,ns))
+         mx=strslet(:,1,:)
+         my=strslet(:,2,:)
+         mz=strslet(:,3,:)
+         vx=strsvec(:,1,:)
+         vy=strsvec(:,2,:)
+         vz=strsvec(:,3,:)
+c     Allocatable accumulators are private and allocated once per thread,
+c     not per target or pair. Densities remain contiguous in packed data.
+c$omp parallel default(shared)
+c$omp& if (.not.omp_in_parallel() .and. nt*ns .ge. 4096)
+c$omp& private(ax,ay,az,i,j,k,x,y,z,dx,dy,dz,r2,ri,ri5,s)
+         allocate(ax(nd),ay(nd),az(nd))
+c$omp do schedule(static)
+         do i=1,nt
+            x=targ(1,i)
+            y=targ(2,i)
+            z=targ(3,i)
+            ax=0.0d0
+            ay=0.0d0
+            az=0.0d0
+            do j=1,ns
+               dx=x-sx(j)
+               dy=y-sy(j)
+               dz=z-sz(j)
+               r2=dx*dx+dy*dy+dz*dz
+               if (r2 .lt. threshsq) cycle
+               ri=1.0d0/sqrt(r2)
+               ri5=ri*ri
+               ri5=ri5*ri5*ri
+c$omp simd private(s)
+               do k=1,nd
+                  s=(dx*mx(k,j)+dy*my(k,j)+dz*mz(k,j))*
+     1              (dx*vx(k,j)+dy*vy(k,j)+dz*vz(k,j))*ri5
+                  ax(k)=ax(k)+dx*s
+                  ay(k)=ay(k)+dy*s
+                  az(k)=az(k)+dz*s
+               enddo
+            enddo
+            do k=1,nd
+               pot(k,1,i)=pot(k,1,i)+c3inv4pi*ax(k)
+               pot(k,2,i)=pot(k,2,i)+c3inv4pi*ay(k)
+               pot(k,3,i)=pot(k,3,i)+c3inv4pi*az(k)
+            enddo
+         enddo
+c$omp end do
+         deallocate(ax,ay,az)
+c$omp end parallel
+         deallocate(mx,my,mz,vx,vy,vz)
+      endif
+      deallocate(sx,sy,sz)
+      return
+      end
